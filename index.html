@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Registro de Viajes y Entregas</title>
+    <style>
+        :root {
+            --bg: #f2f3f5;
+            --surface: #ffffff;
+            --surface-alt: #f8f9fb;
+            --text: #111827;
+            --text-secondary: #6b7280;
+            --text-tertiary: #9ca3af;
+            --border: #e5e7eb;
+            --border-light: #f3f4f6;
+            --primary: #1e40af;
+            --success: #047857;
+            --success-light: #ecfdf5;
+            --warning: #b45309;
+            --warning-light: #fffbeb;
+            --danger: #b91c1c;
+            --danger-light: #fef2f2;
+            --danger-soft: #fecaca;
+            --shadow-xs: 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+            --shadow: 0 4px 6px rgba(0,0,0,0.05);
+            --shadow-lg: 0 20px 25px rgba(0,0,0,0.08);
+            --radius-xs: 4px;
+            --radius-sm: 6px;
+            --radius: 8px;
+            --radius-lg: 12px;
+            --transition: 180ms ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.5;
+        }
+
+        .topbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 16px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(8px);
+        }
+        .topbar-brand { font-size: 1rem; font-weight: 700; color: var(--text); }
+        .topbar-date { font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; }
+
+        .container { max-width: 880px; margin: 0 auto; padding: 16px 12px 40px; }
+
+        .nav {
+            display: flex; gap: 0; margin-bottom: 20px;
+            background: var(--surface); border-radius: var(--radius-lg);
+            padding: 4px; box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+        }
+        .nav-btn {
+            flex: 1; padding: 10px 14px; text-align: center; border-radius: var(--radius);
+            cursor: pointer; font-weight: 500; font-size: 0.8rem; border: none;
+            background: transparent; font-family: inherit; color: var(--text-secondary);
+            transition: all var(--transition); user-select: none;
+        }
+        .nav-btn.active { background: var(--text); color: white; font-weight: 600; }
+        .nav-btn:active { transform: scale(0.97); }
+
+        .section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+        .section-header .indicator { width: 4px; height: 22px; background: var(--primary); border-radius: 2px; flex-shrink: 0; }
+        .section-title { font-size: 1rem; font-weight: 700; }
+        .section-subtitle { font-size: 0.75rem; color: var(--text-secondary); margin-left: auto; }
+
+        .card {
+            background: var(--surface); border-radius: var(--radius-lg);
+            padding: 20px 16px; margin-bottom: 16px;
+            box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+        }
+        .card-emphasis { box-shadow: var(--shadow); border-left: 4px solid var(--primary); }
+
+        .field-group { margin-bottom: 14px; }
+        .field-label {
+            display: block; font-size: 0.72rem; font-weight: 600;
+            color: var(--text-secondary); margin-bottom: 4px;
+            letter-spacing: 0.03em; text-transform: uppercase;
+        }
+        .field-label .required { color: var(--danger); }
+        .field-input, .field-select {
+            width: 100%; padding: 12px 14px; border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 0.9rem;
+            background: var(--surface-alt); font-family: inherit;
+            transition: all var(--transition); color: var(--text);
+        }
+        .field-select {
+            -webkit-appearance: none; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+        }
+        .field-input:focus, .field-select:focus {
+            outline: none; border-color: var(--primary); background: white;
+            box-shadow: 0 0 0 3px rgba(30,64,175,0.08);
+        }
+        .field-input.readonly {
+            background: #eff6ff; font-weight: 600; color: var(--primary);
+            font-size: 1rem; border-color: #dbeafe;
+        }
+        .field-input.error {
+            border-color: var(--danger); background: var(--danger-light);
+            animation: shake 0.45s ease;
+        }
+        .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            15% { transform: translateX(-5px); }
+            30% { transform: translateX(5px); }
+            45% { transform: translateX(-4px); }
+            60% { transform: translateX(4px); }
+            75% { transform: translateX(-2px); }
+        }
+
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center;
+            gap: 6px; padding: 13px 20px; border: none; border-radius: var(--radius-sm);
+            font-size: 0.875rem; font-weight: 600; cursor: pointer; width: 100%;
+            font-family: inherit; transition: all var(--transition); user-select: none;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: var(--text); color: white; }
+        .btn-outline { background: var(--surface); color: var(--text); border: 1.5px solid var(--border); }
+        .btn-danger { background: var(--surface); color: var(--danger); border: 1.5px solid var(--danger-soft); }
+        .btn-sm { padding: 8px 14px; font-size: 0.78rem; width: auto; }
+
+        .result-box {
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border: 1.5px solid #a7f3d0; border-radius: var(--radius);
+            padding: 20px 24px; margin-top: 16px;
+            animation: fadeSlideIn 0.35s ease;
+        }
+        .result-box .result-label {
+            font-size: 0.68rem; font-weight: 700; color: #065f46;
+            text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 2px;
+        }
+        .result-box .result-amount {
+            font-size: 2rem; font-weight: 800; color: #065f46;
+            letter-spacing: -0.03em; line-height: 1;
+        }
+        .result-box .result-detail {
+            font-size: 0.75rem; color: #047857; margin-top: 4px; font-weight: 500;
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .notifications {
+            position: fixed; bottom: 20px; right: 12px; left: 12px;
+            z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+            pointer-events: none;
+        }
+        @media (min-width: 640px) {
+            .notifications { right: 24px; left: auto; bottom: 24px; }
+        }
+        .notification {
+            background: #111827; color: white; border-radius: var(--radius);
+            padding: 12px 16px; box-shadow: var(--shadow-lg);
+            display: flex; align-items: center; gap: 10px;
+            pointer-events: auto;
+            animation: notifIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 0.82rem; font-weight: 500; border-left: 3px solid #4b5563;
+        }
+        .notification.removing { animation: notifOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .notification.warning { border-left-color: #f59e0b; }
+        .notification.success { border-left-color: #10b981; }
+        .notification.error { border-left-color: #ef4444; }
+        .notification .notif-icon {
+            width: 26px; height: 26px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.8rem; flex-shrink: 0;
+        }
+        .notification .notif-icon.warn-icon { background: #fef3c7; color: #b45309; }
+        .notification .notif-icon.success-icon { background: #d1fae5; color: #047857; }
+        .notification .notif-icon.error-icon { background: #fecaca; color: #b91c1c; }
+        .notification .notif-close {
+            background: none; border: none; color: rgba(255,255,255,0.5);
+            cursor: pointer; font-size: 1rem; flex-shrink: 0; padding: 0 4px; margin-left: auto;
+        }
+
+        @keyframes notifIn {
+            from { transform: translateY(60px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes notifOut {
+            from { transform: translateY(0); opacity: 1; }
+            to { transform: translateY(60px); opacity: 0; }
+        }
+
+        .table-tarifas { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 0.8rem; }
+        .table-tarifas thead th {
+            background: var(--surface-alt); padding: 10px 12px; text-align: left;
+            font-size: 0.68rem; font-weight: 700; color: var(--text-secondary);
+            text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 2px solid var(--border);
+        }
+        .table-tarifas tbody td {
+            padding: 10px 12px; border-bottom: 1px solid var(--border-light);
+            vertical-align: middle; font-weight: 500;
+        }
+        .table-tarifas tbody tr:last-child td { border-bottom: none; }
+        .table-tarifas input {
+            width: 100px; padding: 6px 8px; border: 1.5px solid var(--border);
+            border-radius: var(--radius-xs); font-size: 0.8rem; text-align: right;
+            font-family: inherit; background: white; font-weight: 500;
+        }
+        .row-highlight { background: var(--warning-light); }
+
+        .config-inline {
+            display: flex; align-items: center; gap: 8px; margin-top: 12px;
+            padding: 12px 14px; background: var(--surface-alt); border-radius: var(--radius);
+            border: 1px solid var(--border); font-size: 0.8rem; font-weight: 500; flex-wrap: wrap;
+        }
+        .config-inline input {
+            width: 120px; padding: 6px 8px; border: 1.5px solid var(--border);
+            border-radius: var(--radius-xs); text-align: right;
+            font-family: inherit; font-size: 0.8rem; font-weight: 500;
+        }
+        .config-inline.accent { background: var(--danger-light); border-color: var(--danger-soft); }
+
+        .table-container {
+            overflow-x: auto; border-radius: var(--radius);
+            border: 1px solid var(--border); background: white;
+            -webkit-overflow-scrolling: touch;
+        }
+        .table-historial { width: 100%; border-collapse: collapse; font-size: 0.78rem; min-width: 650px; }
+        .table-historial thead th {
+            background: #f8f9fb; padding: 10px 8px; text-align: center;
+            font-weight: 700; font-size: 0.65rem; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--text-secondary);
+            border-bottom: 2px solid #e5e7eb; white-space: nowrap; position: sticky; top: 0;
+        }
+        .table-historial tbody td {
+            padding: 10px 8px; text-align: center; border-bottom: 1px solid var(--border-light);
+        }
+        .table-historial tbody tr:nth-child(even) { background: #fcfcfd; }
+        .cell-route { text-align: left !important; font-weight: 500; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cell-number { font-weight: 600; }
+        .cell-amount { font-weight: 700; color: var(--success); font-size: 0.82rem; }
+        .cell-id { color: var(--text-tertiary); font-weight: 500; font-size: 0.7rem; }
+        .type-badge {
+            display: inline-block; padding: 3px 8px; border-radius: 100px;
+            font-size: 0.65rem; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase;
+        }
+        .type-normal { background: #ecfdf5; color: #065f46; }
+        .type-extra { background: #fef2f2; color: #991b1b; }
+
+        .summary {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px;
+        }
+        @media (min-width: 500px) {
+            .summary { grid-template-columns: repeat(4, 1fr); }
+        }
+        .summary-card {
+            background: var(--surface); padding: 14px 12px;
+            border-radius: var(--radius); text-align: center;
+            border: 1px solid var(--border); position: relative; overflow: hidden;
+        }
+        .summary-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+        }
+        .summary-card.accent::before { background: var(--primary); }
+        .summary-card.success::before { background: var(--success); }
+        .summary-card.warning::before { background: var(--warning); }
+        .summary-card.neutral::before { background: #6366f1; }
+        .summary-value { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.02em; color: var(--text); margin-top: 2px; }
+        .summary-label { font-size: 0.65rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+
+        .empty-state { text-align: center; padding: 40px 16px; color: var(--text-tertiary); font-size: 0.85rem; font-weight: 500; }
+        .hidden { display: none; }
+        .flex-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .mt-3 { margin-top: 14px; }
+        .mt-2 { margin-top: 8px; }
+
+        @media (max-width: 400px) {
+            .field-row { grid-template-columns: 1fr; }
+            .card { padding: 16px 12px; }
+            .topbar { padding: 0 12px; height: 48px; }
+            .topbar-brand { font-size: 0.9rem; }
+            .btn { padding: 12px 16px; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="topbar">
+        <div class="topbar-brand">Registro de Viajes</div>
+        <div class="topbar-date" id="fechaActual"></div>
+    </div>
+
+    <div class="notifications" id="notifications"></div>
+
+    <div class="container">
+        <nav class="nav">
+            <button class="nav-btn active" onclick="showTab('viaje')">Nuevo</button>
+            <button class="nav-btn" onclick="showTab('tarifas')">Tarifas</button>
+            <button class="nav-btn" onclick="showTab('historial')">Historial</button>
+        </nav>
+
+        <!-- NUEVO VIAJE -->
+        <div id="tab-viaje">
+            <div class="card card-emphasis">
+                <div class="section-header">
+                    <div class="indicator"></div>
+                    <div class="section-title">Registrar Nuevo Viaje</div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Fecha</label>
+                    <input type="date" class="field-input readonly" id="fecha" readonly>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Ruta / Descripción <span class="required">*</span></label>
+                    <input type="text" class="field-input" id="ruta" placeholder="Origen y destino del viaje">
+                </div>
+                <div class="field-row">
+                    <div class="field-group">
+                        <label class="field-label">Km Inicial <span class="required">*</span></label>
+                        <input type="text" class="field-input" id="kmInicial" placeholder="0" inputmode="numeric" oninput="quitarError('kmInicial'); formatearKMInput('kmInicial'); calcular();">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Km Final <span class="required">*</span></label>
+                        <input type="text" class="field-input" id="kmFinal" placeholder="0" inputmode="numeric" oninput="quitarError('kmFinal'); formatearKMInput('kmFinal'); calcular();">
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Km Recorridos</label>
+                    <input type="text" class="field-input readonly" id="kmRecorridos" readonly value="0">
+                </div>
+                <div class="field-group">
+                    <label class="field-label">Tipo de Viaje</label>
+                    <select class="field-select" id="tipoViaje" onchange="calcular()">
+                        <option value="normal">Viaje Normal (1ª Vuelta)</option>
+                        <option value="extra">Viaje Extra (2ª / 3ª Vuelta)</option>
+                    </select>
+                </div>
+                <div class="result-box" id="resultBox" style="display:none;">
+                    <div class="result-label">Importe a Cobrar</div>
+                    <div class="result-amount" id="montoTotal">$0,00</div>
+                    <div class="result-detail" id="detalleCalculo"></div>
+                </div>
+                <button class="btn btn-primary mt-3" onclick="guardarViaje()">Registrar Viaje</button>
+            </div>
+        </div>
+
+        <!-- TARIFAS -->
+        <div id="tab-tarifas" class="hidden">
+            <div class="card">
+                <div class="section-header">
+                    <div class="indicator"></div>
+                    <div class="section-title">Tabla de Tarifas</div>
+                    <div class="section-subtitle">Se guardan automáticamente</div>
+                </div>
+                <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+                <table class="table-tarifas">
+                    <thead><tr><th>Tramo</th><th>Desde</th><th>Hasta</th><th>Tarifa</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>Tramo 1</strong></td><td>0 km</td><td><input type="number" id="t1_hasta" value="120" min="0" onchange="guardarTarifas()"> km</td><td style="text-align:right;">$ <input type="number" id="t1_tarifa" value="86824.60" step="0.01" min="0" onchange="guardarTarifas()"></td></tr>
+                        <tr><td><strong>Tramo 2</strong></td><td id="t2_desde">121 km</td><td><input type="number" id="t2_hasta" value="240" min="0" onchange="guardarTarifas()"> km</td><td style="text-align:right;">$ <input type="number" id="t2_tarifa" value="130216.29" step="0.01" min="0" onchange="guardarTarifas()"></td></tr>
+                        <tr><td><strong>Tramo 3</strong></td><td id="t3_desde">241 km</td><td><input type="number" id="t3_hasta" value="479" min="0" onchange="guardarTarifas()"> km</td><td style="text-align:right;">$ <input type="number" id="t3_tarifa" value="173621.72" step="0.01" min="0" onchange="guardarTarifas()"></td></tr>
+                        <tr class="row-highlight"><td><strong>Tramo 4</strong></td><td id="t4_desde">480 km</td><td>en adelante</td><td style="text-align:right;">$ <input type="number" id="t4_tarifa" value="217027.13" step="0.01" min="0" onchange="guardarTarifas()"></td></tr>
+                    </tbody>
+                </table>
+                </div>
+                <div class="config-inline mt-2">
+                    <span style="font-weight:600;">Adicional km (Tramo 4): $</span>
+                    <input type="number" id="adicionalKm" value="320.50" step="0.01" min="0" onchange="guardarTarifas()">
+                    <span style="color:var(--text-secondary);">/ km</span>
+                </div>
+                <div class="config-inline accent">
+                    <span style="font-weight:600;">Viaje Extra (2ª/3ª): $</span>
+                    <input type="number" id="tarifaExtra" value="43405.43" step="0.01" min="0" onchange="guardarTarifas()">
+                    <span style="color:var(--text-secondary);">fijo</span>
+                </div>
+                <button class="btn btn-outline btn-sm mt-2" onclick="restaurarTarifas()">Restablecer originales</button>
+            </div>
+        </div>
+
+        <!-- HISTORIAL -->
+        <div id="tab-historial" class="hidden">
+            <div class="card">
+                <div class="section-header">
+                    <div class="indicator"></div>
+                    <div class="section-title">Historial de Viajes</div>
+                    <div class="section-subtitle" id="totalViajesTexto"></div>
+                </div>
+                <div class="summary" id="resumenHistorial"></div>
+                <div class="table-container">
+                    <table class="table-historial">
+                        <thead><tr><th>#</th><th>Fecha</th><th>Ruta</th><th>Km Ini</th><th>Km Fin</th><th>Km Rec</th><th>Tipo</th><th>Importe</th></tr></thead>
+                        <tbody id="cuerpoHistorial"></tbody>
+                    </table>
+                </div>
+                <div id="emptyHistorial" class="empty-state">No hay viajes registrados.</div>
+                <div class="flex-row mt-3">
+                    <button class="btn btn-danger btn-sm" onclick="limpiarHistorial()" id="btnLimpiar">Eliminar</button>
+                    <button class="btn btn-outline btn-sm" onclick="exportarHistorial()">Exportar Excel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwU-LUOdv34W7yDjg8pE1v3QuxFR1y_zz7fEipfcDCXcQkphhV_XAUjbHyo-RDrlh9_1Q/exec';
+
+        const TARIFAS_DEFAULT = {
+            tramo1_hasta: 120, tramo1_tarifa: 86824.60,
+            tramo2_hasta: 240, tramo2_tarifa: 130216.29,
+            tramo3_hasta: 479, tramo3_tarifa: 173621.72,
+            tramo4_tarifa: 217027.13, adicionalKm: 320.50, tarifaExtra: 43405.43
+        };
+
+        let historialLocal = [];
+        let online = true;
+
+        function notificar(mensaje, tipo = 'info') {
+            const c = document.getElementById('notifications');
+            const ic = { success: 'success-icon', warning: 'warn-icon', error: 'error-icon', info: '' };
+            const ch = { success: '✓', warning: '!', error: '✕', info: 'i' };
+            const n = document.createElement('div');
+            n.className = `notification ${tipo}`;
+            n.innerHTML = `<div class="notif-icon ${ic[tipo]}">${ch[tipo]}</div><span>${mensaje}</span><button class="notif-close" onclick="this.parentElement.classList.add('removing');setTimeout(()=>this.parentElement.remove(),300)">✕</button>`;
+            c.appendChild(n);
+            setTimeout(() => { if (n.parentElement) { n.classList.add('removing'); setTimeout(() => { if (n.parentElement) n.remove(); }, 300); } }, 5000);
+        }
+
+        function marcarError(id) { const e = document.getElementById(id); e.classList.add('error'); setTimeout(() => e.classList.remove('error'), 2500); }
+        function quitarError(id) { document.getElementById(id).classList.remove('error'); }
+
+        async function syncWithGoogle(action, data = {}) {
+            try {
+                const resp = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action, ...data }),
+                    headers: { 'Content-Type': 'application/json' },
+                    mode: 'no-cors'
+                });
+                online = true;
+                return { success: true };
+            } catch (error) {
+                console.warn('Sin conexión:', error);
+                online = false;
+                return null;
+            }
+        }
+
+        async function cargarHistorialDesdeGoogle() {
+            const d = localStorage.getItem('historial_viajes');
+            historialLocal = d ? JSON.parse(d) : [];
+            mostrarHistorial();
+        }
+
+        async function guardarViajeEnGoogle(viaje) {
+            const result = await syncWithGoogle('guardar', { viaje });
+            historialLocal.unshift(viaje);
+            localStorage.setItem('historial_viajes', JSON.stringify(historialLocal));
+            if (!online) {
+                notificar('Sin conexión. Viaje guardado localmente.', 'warning');
+            }
+            return true;
+        }
+
+        async function limpiarHistorialGoogle() {
+            await syncWithGoogle('limpiar');
+            historialLocal = [];
+            localStorage.setItem('historial_viajes', JSON.stringify([]));
+            return true;
+        }
+
+        function init() {
+            const hoy = new Date();
+            document.getElementById('fecha').value = hoy.toISOString().split('T')[0];
+            document.getElementById('fechaActual').textContent = hoy.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short' });
+            cargarTarifas();
+            cargarHistorialDesdeGoogle();
+        }
+
+        function cargarTarifas() {
+            const g = localStorage.getItem('tarifas_viajes');
+            const t = g ? JSON.parse(g) : TARIFAS_DEFAULT;
+            document.getElementById('t1_hasta').value = t.tramo1_hasta;
+            document.getElementById('t1_tarifa').value = t.tramo1_tarifa;
+            document.getElementById('t2_hasta').value = t.tramo2_hasta;
+            document.getElementById('t2_tarifa').value = t.tramo2_tarifa;
+            document.getElementById('t3_hasta').value = t.tramo3_hasta;
+            document.getElementById('t3_tarifa').value = t.tramo3_tarifa;
+            document.getElementById('t4_tarifa').value = t.tramo4_tarifa;
+            document.getElementById('adicionalKm').value = t.adicionalKm;
+            document.getElementById('tarifaExtra').value = t.tarifaExtra;
+            actualizarTablaDesde();
+        }
+
+        function actualizarTablaDesde() {
+            const t1h = parseInt(document.getElementById('t1_hasta').value) || 0;
+            const t2h = parseInt(document.getElementById('t2_hasta').value) || 0;
+            const t3h = parseInt(document.getElementById('t3_hasta').value) || 0;
+            document.getElementById('t2_desde').textContent = (t1h + 1) + ' km';
+            document.getElementById('t3_desde').textContent = (t2h + 1) + ' km';
+            document.getElementById('t4_desde').textContent = (t3h + 1) + ' km';
+        }
+
+        function guardarTarifas() {
+            const t = {
+                tramo1_hasta: parseFloat(document.getElementById('t1_hasta').value) || 0,
+                tramo1_tarifa: parseFloat(document.getElementById('t1_tarifa').value) || 0,
+                tramo2_hasta: parseFloat(document.getElementById('t2_hasta').value) || 0,
+                tramo2_tarifa: parseFloat(document.getElementById('t2_tarifa').value) || 0,
+                tramo3_hasta: parseFloat(document.getElementById('t3_hasta').value) || 0,
+                tramo3_tarifa: parseFloat(document.getElementById('t3_tarifa').value) || 0,
+                tramo4_tarifa: parseFloat(document.getElementById('t4_tarifa').value) || 0,
+                adicionalKm: parseFloat(document.getElementById('adicionalKm').value) || 0,
+                tarifaExtra: parseFloat(document.getElementById('tarifaExtra').value) || 0
+            };
+            localStorage.setItem('tarifas_viajes', JSON.stringify(t));
+            actualizarTablaDesde();
+            calcular();
+            notificar('Tarifas actualizadas', 'success');
+        }
+
+        function restaurarTarifas() {
+            localStorage.setItem('tarifas_viajes', JSON.stringify(TARIFAS_DEFAULT));
+            cargarTarifas();
+            calcular();
+            notificar('Tarifas restablecidas', 'info');
+        }
+
+        function obtenerTarifas() {
+            const g = localStorage.getItem('tarifas_viajes');
+            return g ? JSON.parse(g) : TARIFAS_DEFAULT;
+        }
+
+        function fmtMonto(n) { return new Intl.NumberFormat('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2, useGrouping: true }).format(n); }
+        function fmtKM(n) { return new Intl.NumberFormat('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 0, useGrouping: true }).format(n); }
+        function fmtFecha(f) { if (!f) return ''; const p = f.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; }
+        function toKM(t) { if (!t) return 0; return parseFloat(t.replace(/\./g, '').replace(',', '.')) || 0; }
+
+        function formatearKMInput(campo) {
+            const input = document.getElementById(campo);
+            const v = input.value, nums = v.replace(/\D/g, '');
+            if (nums === '') { input.value = ''; return; }
+            input.value = fmtKM(parseInt(nums, 10));
+        }
+
+        function calcMonto(km, tipo) {
+            const t = obtenerTarifas();
+            if (tipo === 'extra') return t.tarifaExtra;
+            if (km <= t.tramo1_hasta) return t.tramo1_tarifa;
+            if (km <= t.tramo2_hasta) return t.tramo2_tarifa;
+            if (km <= t.tramo3_hasta) return t.tramo3_tarifa;
+            return t.tramo4_tarifa + ((km - t.tramo3_hasta) * t.adicionalKm);
+        }
+
+        function calcular() {
+            const ki = toKM(document.getElementById('kmInicial').value);
+            const kf = toKM(document.getElementById('kmFinal').value);
+            const tipo = document.getElementById('tipoViaje').value;
+            let kr = kf > ki ? kf - ki : 0;
+            document.getElementById('kmRecorridos').value = fmtKM(kr);
+            const rb = document.getElementById('resultBox');
+            if (kr <= 0) { rb.style.display = 'none'; return; }
+            const monto = calcMonto(kr, tipo);
+            const t = obtenerTarifas();
+            let det = '';
+            if (tipo === 'extra') { det = 'Tarifa fija para viajes extra'; }
+            else {
+                if (kr <= t.tramo1_hasta) det = `Tramo 1 · 0 a ${fmtKM(t.tramo1_hasta)} km`;
+                else if (kr <= t.tramo2_hasta) det = `Tramo 2 · ${fmtKM(t.tramo1_hasta+1)} a ${fmtKM(t.tramo2_hasta)} km`;
+                else if (kr <= t.tramo3_hasta) det = `Tramo 3 · ${fmtKM(t.tramo2_hasta+1)} a ${fmtKM(t.tramo3_hasta)} km`;
+                else { const ex = kr - t.tramo3_hasta; det = `Tramo 4 · +${fmtKM(t.tramo3_hasta)} km`; }
+            }
+            rb.style.display = 'block';
+            document.getElementById('montoTotal').textContent = '$' + fmtMonto(monto);
+            document.getElementById('detalleCalculo').textContent = det;
+        }
+
+        async function guardarViaje() {
+            const fecha = document.getElementById('fecha').value;
+            const ruta = document.getElementById('ruta').value.trim();
+            const ki = toKM(document.getElementById('kmInicial').value);
+            const kf = toKM(document.getElementById('kmFinal').value);
+            const kr = toKM(document.getElementById('kmRecorridos').value);
+            const tipo = document.getElementById('tipoViaje').value;
+
+            if (!ruta) { notificar('Ingrese la ruta del viaje', 'warning'); marcarError('ruta'); return; }
+            if (kr <= 0) { notificar('Km Final debe ser mayor a Km Inicial', 'warning'); marcarError('kmFinal'); return; }
+
+            const monto = calcMonto(kr, tipo);
+            const viaje = { id: Date.now(), fecha, ruta, kmInicial: ki, kmFinal: kf, kmRecorridos: kr, tipoViaje: tipo, monto };
+
+            await guardarViajeEnGoogle(viaje);
+
+            document.getElementById('ruta').value = '';
+            document.getElementById('kmInicial').value = '';
+            document.getElementById('kmFinal').value = '';
+            document.getElementById('kmRecorridos').value = '0';
+            document.getElementById('tipoViaje').value = 'normal';
+            document.getElementById('resultBox').style.display = 'none';
+            notificar('Viaje registrado · $' + fmtMonto(monto), 'success');
+            mostrarHistorial();
+        }
+
+        function mostrarHistorial() {
+            const hist = historialLocal;
+            const cuerpo = document.getElementById('cuerpoHistorial');
+            const empty = document.getElementById('emptyHistorial');
+            const resumen = document.getElementById('resumenHistorial');
+            const btnLimpiar = document.getElementById('btnLimpiar');
+            const tc = document.querySelector('.table-container');
+            const tt = document.getElementById('totalViajesTexto');
+
+            if (hist.length === 0) {
+                cuerpo.innerHTML = ''; resumen.innerHTML = ''; empty.style.display = 'block';
+                tc.style.display = 'none'; btnLimpiar.style.display = 'none'; tt.textContent = '';
+                return;
+            }
+            empty.style.display = 'none'; tc.style.display = 'block'; btnLimpiar.style.display = 'inline-flex';
+            tt.textContent = hist.length + ' viajes';
+
+            const tm = hist.reduce((s, v) => s + v.monto, 0);
+            const tkm = hist.reduce((s, v) => s + v.kmRecorridos, 0);
+            const n = hist.filter(v => v.tipoViaje === 'normal').length;
+            const e = hist.filter(v => v.tipoViaje === 'extra').length;
+
+            resumen.innerHTML = `
+                <div class="summary-card accent"><div class="summary-label">Viajes</div><div class="summary-value">${hist.length}</div></div>
+                <div class="summary-card success"><div class="summary-label">Facturación</div><div class="summary-value">$${fmtMonto(tm)}</div></div>
+                <div class="summary-card warning"><div class="summary-label">Km Totales</div><div class="summary-value">${fmtKM(tkm)}</div></div>
+                <div class="summary-card neutral"><div class="summary-label">Norm / Extra</div><div class="summary-value">${n}/${e}</div></div>`;
+
+            cuerpo.innerHTML = hist.map((v, i) => `
+                <tr>
+                    <td class="cell-id">${String(hist.length - i).padStart(3,'0')}</td>
+                    <td>${fmtFecha(v.fecha)}</td>
+                    <td class="cell-route" title="${v.ruta}">${v.ruta}</td>
+                    <td class="cell-number">${fmtKM(v.kmInicial)}</td>
+                    <td class="cell-number">${fmtKM(v.kmFinal)}</td>
+                    <td class="cell-number">${fmtKM(v.kmRecorridos)}</td>
+                    <td><span class="type-badge ${v.tipoViaje==='extra'?'type-extra':'type-normal'}">${v.tipoViaje==='extra'?'Extra':'Normal'}</span></td>
+                    <td class="cell-amount">$${fmtMonto(v.monto)}</td>
+                </tr>`).join('');
+        }
+
+        async function limpiarHistorial() {
+            if (confirm('¿Eliminar todo el historial de forma permanente?')) {
+                await limpiarHistorialGoogle();
+                mostrarHistorial();
+                notificar('Historial eliminado', 'info');
+            }
+        }
+
+        function exportarHistorial() {
+            const hist = historialLocal;
+            if (hist.length === 0) { notificar('Sin datos para exportar', 'warning'); return; }
+            const tm = hist.reduce((s, v) => s + v.monto, 0);
+            const tkm = hist.reduce((s, v) => s + v.kmRecorridos, 0);
+            const n = hist.filter(v => v.tipoViaje === 'normal').length;
+            const e = hist.filter(v => v.tipoViaje === 'extra').length;
+            const fg = new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+            let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Historial</x:Name></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+<style>@page{margin:0.8cm}body{font-family:Calibri,Arial,sans-serif}.header{background:#1e40af;color:white;padding:18px 22px;margin-bottom:18px}.header h1{margin:0;font-size:16pt}.summary{border-collapse:collapse;margin-bottom:16px}.summary td{padding:7px 16px;border:1px solid #d1d5db;font-size:9pt;background:#f8f9fb}.summary td:last-child{background:white;font-weight:700}table.data{width:100%;border-collapse:collapse;font-size:9pt}table.data thead th{background:#111827;color:white;padding:10px 12px;text-align:center;font-weight:600;text-transform:uppercase;font-size:7.5pt}table.data tbody td{padding:8px 12px;text-align:center;border:1px solid #d1d5db}table.data tbody tr:nth-child(even){background:#f9fafb}.amount{font-weight:700;color:#047857}.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:600}.badge-normal{background:#d1fae5;color:#065f46}.badge-extra{background:#fecaca;color:#991b1b}.footer{margin-top:18px;padding-top:10px;border-top:2px solid #e5e7eb;font-size:7pt;color:#9ca3af;text-align:center}</style></head><body>
+<div class="header"><h1>REGISTRO DE VIAJES Y ENTREGAS</h1><p>Generado: ${fg}</p></div>
+<table class="summary"><tr><td>Total Viajes</td><td>${hist.length}</td></tr><tr><td>Facturación</td><td>$ ${fmtMonto(tm)}</td></tr><tr><td>Km Totales</td><td>${fmtKM(tkm)} km</td></tr><tr><td>Normales / Extra</td><td>${n} / ${e}</td></tr></table>
+<table class="data"><thead><tr><th>#</th><th>Fecha</th><th>Ruta</th><th>Km Ini</th><th>Km Fin</th><th>Km Rec</th><th>Tipo</th><th>Importe</th></tr></thead><tbody>`;
+
+            hist.forEach((v, i) => {
+                html += `<tr><td>${String(hist.length-i).padStart(3,'0')}</td><td>${fmtFecha(v.fecha)}</td><td style="text-align:left">${v.ruta}</td><td>${fmtKM(v.kmInicial)}</td><td>${fmtKM(v.kmFinal)}</td><td>${fmtKM(v.kmRecorridos)}</td><td><span class="badge ${v.tipoViaje==='extra'?'badge-extra':'badge-normal'}">${v.tipoViaje==='extra'?'Extra':'Normal'}</span></td><td class="amount">$ ${fmtMonto(v.monto)}</td></tr>`;
+            });
+
+            html += `</tbody></table><div class="footer">Documento generado automáticamente</div></body></html>`;
+
+            const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Registro_Viajes_${new Date().toISOString().split('T')[0]}.xls`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            notificar('Excel descargado', 'success');
+        }
+
+        function showTab(tab) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.add('hidden'));
+            const idx = tab === 'viaje' ? 0 : tab === 'tarifas' ? 1 : 2;
+            document.querySelectorAll('.nav-btn')[idx].classList.add('active');
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+            if (tab === 'historial') mostrarHistorial();
+        }
+
+        init();
+    </script>
+</body>
+</html>
