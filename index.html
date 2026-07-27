@@ -419,6 +419,7 @@
     </div>
 
     <script>
+        // 🔥 CAMBIA ESTA URL POR LA QUE OBTENGAS DE GOOGLE APPS SCRIPT
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz7Cn3RaAjdARVVfHH6M6ZNCqd1Hvp0M_8Cn7iGDcWxSNx68z2ocAdxZV3oYCMncb27/exec';
 
         const TARIFAS_DEFAULT = {
@@ -447,42 +448,82 @@
 
         async function syncWithGoogle(action, data = {}) {
             try {
-                const resp = await fetch(GOOGLE_SCRIPT_URL, {
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
                     body: JSON.stringify({ action, ...data }),
-                    headers: { 'Content-Type': 'application/json' },
-                    mode: 'no-cors'
+                    headers: { 'Content-Type': 'application/json' }
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
                 online = true;
-                return { success: true };
+                return result;
+
             } catch (error) {
-                console.warn('Sin conexión:', error);
+                console.error('Error de conexión:', error);
                 online = false;
+                notificar('Sin conexión a internet. Los datos se guardan localmente.', 'warning');
                 return null;
             }
         }
 
         async function cargarHistorialDesdeGoogle() {
-            const d = localStorage.getItem('historial_viajes');
-            historialLocal = d ? JSON.parse(d) : [];
+            try {
+                const result = await syncWithGoogle('obtener');
+                if (result && result.success && result.viajes) {
+                    historialLocal = result.viajes;
+                    localStorage.setItem('historial_viajes', JSON.stringify(historialLocal));
+                } else {
+                    const d = localStorage.getItem('historial_viajes');
+                    historialLocal = d ? JSON.parse(d) : [];
+                }
+            } catch (error) {
+                console.error('Error cargando historial:', error);
+                const d = localStorage.getItem('historial_viajes');
+                historialLocal = d ? JSON.parse(d) : [];
+            }
             mostrarHistorial();
         }
 
         async function guardarViajeEnGoogle(viaje) {
-            const result = await syncWithGoogle('guardar', { viaje });
-            historialLocal.unshift(viaje);
-            localStorage.setItem('historial_viajes', JSON.stringify(historialLocal));
-            if (!online) {
-                notificar('Sin conexión. Viaje guardado localmente.', 'warning');
+            try {
+                const result = await syncWithGoogle('guardar', { viaje });
+                historialLocal.unshift(viaje);
+                localStorage.setItem('historial_viajes', JSON.stringify(historialLocal));
+                if (result && result.success) {
+                    notificar('Viaje guardado en Google Sheets', 'success');
+                } else {
+                    notificar('Viaje guardado localmente (sin conexión con Google)', 'warning');
+                }
+                return true;
+            } catch (error) {
+                historialLocal.unshift(viaje);
+                localStorage.setItem('historial_viajes', JSON.stringify(historialLocal));
+                notificar('Viaje guardado localmente (error de conexión)', 'warning');
+                return true;
             }
-            return true;
         }
 
         async function limpiarHistorialGoogle() {
-            await syncWithGoogle('limpiar');
-            historialLocal = [];
-            localStorage.setItem('historial_viajes', JSON.stringify([]));
-            return true;
+            try {
+                const result = await syncWithGoogle('limpiar');
+                historialLocal = [];
+                localStorage.setItem('historial_viajes', JSON.stringify([]));
+                if (result && result.success) {
+                    notificar('Historial eliminado de Google Sheets', 'info');
+                } else {
+                    notificar('Historial eliminado localmente (sin conexión con Google)', 'warning');
+                }
+                return true;
+            } catch (error) {
+                historialLocal = [];
+                localStorage.setItem('historial_viajes', JSON.stringify([]));
+                notificar('Historial eliminado localmente (error de conexión)', 'warning');
+                return true;
+            }
         }
 
         function init() {
@@ -613,7 +654,6 @@
             document.getElementById('kmRecorridos').value = '0';
             document.getElementById('tipoViaje').value = 'normal';
             document.getElementById('resultBox').style.display = 'none';
-            notificar('Viaje registrado · $' + fmtMonto(monto), 'success');
             mostrarHistorial();
         }
 
@@ -662,7 +702,6 @@
             if (confirm('¿Eliminar todo el historial de forma permanente?')) {
                 await limpiarHistorialGoogle();
                 mostrarHistorial();
-                notificar('Historial eliminado', 'info');
             }
         }
 
